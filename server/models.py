@@ -64,11 +64,19 @@ class Movie(db.Model):
             raise ValueError('genre must be 30 characters or fewer')
         return genre
 
+    @validates('rating')
+    def validate_rating(self, key, rating):
+        if rating < 0 or rating > 10:
+            raise ValueError('rating must be 0-10')
+        return rating
+
     @validates('watched_on')
     def validate_watched_on(self, key, watched_on):
         if watched_on and len(watched_on) > 20:
             raise ValueError('watched on must be 20 characters or fewer')
         return watched_on
+
+    
 
     def to_dict(self):
         return {
