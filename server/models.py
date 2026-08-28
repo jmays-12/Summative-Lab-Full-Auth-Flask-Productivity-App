@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from sqlalchemy.orm import validates
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from config import db, bcrypt
 
@@ -9,11 +10,11 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
-    _password_hash = db.Column(db.String)
+    _password_hash = db.Column(db.String, nullable=False)
 
     movies = db.relationship('Movie', backref='user')
 
-    @property
+    @hybrid_property
     def password_hash(self):
         raise AttributeError('Password hash cannot be viewed')
 
@@ -38,6 +39,8 @@ class User(db.Model):
             'username': self.username,
         }
 
+    def __repr__(self):
+        return f'<User {self.id}: {self.username}>'
 
 class Movie(db.Model):
     __tablename__ = 'movies'
@@ -66,7 +69,7 @@ class Movie(db.Model):
 
     @validates('rating')
     def validate_rating(self, key, rating):
-        if rating < 0 or rating > 10:
+        if rating is not None and (rating < 0 or rating > 10):
             raise ValueError('rating must be 0-10')
         return rating
 
