@@ -1,4 +1,3 @@
-```python
 #!/usr/bin/env python3
 
 from flask import request, session
@@ -81,11 +80,19 @@ class Movies(Resource):
     def post(self):
         data = request.get_json() or {}
 
+        title = data.get('title')
+        genre = data.get('genre')
+        rating = data.get('rating')
+        watched_on = data.get('watched_on')
+
+        if not title or not genre:
+            return {'error': 'title and genre are required'}, 422
+
         movie = Movie(
-            title=data.get('title'),
-            genre=data.get('genre'),
-            rating=data.get('rating'),
-            watched_on=data.get('watched_on'),
+            title=title,
+            genre=genre,
+            rating=rating,
+            watched_on=watched_on,
             user_id=session['user_id']
         )
 
