@@ -68,14 +68,25 @@ class CheckSession(Resource):
 
         return {'error': 'not logged in'}, 401
 
-
 class Movies(Resource):
     def get(self):
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+
         movies = Movie.query.filter_by(
             user_id=session['user_id']
-        ).all()
+        ).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
 
-        return [movie.to_dict() for movie in movies], 200
+        return {
+            'movies': [movie.to_dict() for movie in movies.items],
+            'total': movies.total,
+            'page': movies.page,
+            'pages': movies.pages
+        }, 200
 
     def post(self):
         data = request.get_json() or {}
@@ -100,7 +111,6 @@ class Movies(Resource):
         db.session.commit()
 
         return movie.to_dict(), 201
-
 
 class MovieByID(Resource):
     def patch(self, id):
