@@ -16,6 +16,7 @@ class User(db.Model):
 
     movies = db.relationship('Movie', backref='user')
 
+    # hybrid property instead of normal property so this works at class level instead of just instance level
     @hybrid_property
     def password_hash(self):
         raise AttributeError('Password hash cannot be viewed')
@@ -70,12 +71,14 @@ class Movie(db.Model):
             raise ValueError('genre must be 30 characters or fewer')
         return genre
 
+    # check for None first, comparing None < 0 throws a TypeError since rating isnt required
     @validates('rating')
     def validate_rating(self, key, rating):
         if rating is not None and (rating < 0 or rating > 10):
             raise ValueError('rating must be 0-10')
         return rating
 
+    # checking for actual date object now instead of string + length check
     @validates('watched_on')
     def validate_watched_on(self, key, watched_on):
         if watched_on is not None and not isinstance(watched_on, date):

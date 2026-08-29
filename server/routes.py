@@ -7,6 +7,7 @@ from models import User, Movie
 from schemas import user_schema, movie_schema, movie_schema_partial
 
 
+# runs before every request. blocks anyone without a session with the exceptions of open_access_list endpoints
 @app.before_request
 def check_logged_in():
     open_access_list = ['Signup', 'Login', 'CheckSession']
@@ -22,7 +23,7 @@ class Signup(Resource):
         errors = user_schema.validate(data)
         if errors:
             return errors, 422
-
+        # duplicate username check
         if User.query.filter_by(username=data['username']).first():
             return {'error': 'username already taken'}, 422
 
@@ -77,6 +78,8 @@ class Movies(Resource):
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
 
+
+        # paginate() is very helpful to do all the pagination for us
         movies = Movie.query.filter_by(
             user_id=session['user_id']
         ).paginate(
@@ -98,7 +101,7 @@ class Movies(Resource):
         errors = movie_schema.validate(data)
         if errors:
             return errors, 422
-
+        
         valid_data = movie_schema.load(data)
 
         movie = Movie(

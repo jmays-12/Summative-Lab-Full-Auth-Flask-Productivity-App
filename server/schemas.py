@@ -37,4 +37,5 @@ class MovieSchema(Schema):
 
 user_schema = UserSchema()
 movie_schema = MovieSchema()
+# partial=True so patch can just send one field its changing instead of needing everything
 movie_schema_partial = MovieSchema(partial=True)
