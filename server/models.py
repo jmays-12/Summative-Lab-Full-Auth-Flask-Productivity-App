@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from datetime import date
+
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -42,6 +44,7 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.id}: {self.username}>'
 
+
 class Movie(db.Model):
     __tablename__ = 'movies'
 
@@ -49,9 +52,9 @@ class Movie(db.Model):
     title = db.Column(db.String, nullable=False)
     genre = db.Column(db.String)
     rating = db.Column(db.Integer)
-    watched_on = db.Column(db.String)
+    watched_on = db.Column(db.Date)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     @validates('title')
     def validate_title(self, key, title):
@@ -75,11 +78,9 @@ class Movie(db.Model):
 
     @validates('watched_on')
     def validate_watched_on(self, key, watched_on):
-        if watched_on and len(watched_on) > 20:
-            raise ValueError('watched on must be 20 characters or fewer')
+        if watched_on is not None and not isinstance(watched_on, date):
+            raise ValueError('watched_on must be a valid date')
         return watched_on
-
-    
 
     def to_dict(self):
         return {
@@ -87,6 +88,6 @@ class Movie(db.Model):
             'title': self.title,
             'genre': self.genre,
             'rating': self.rating,
-            'watched_on': self.watched_on,
+            'watched_on': self.watched_on.isoformat() if self.watched_on else None,
             'user_id': self.user_id,
         }

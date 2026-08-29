@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-
 from flask import request, session
 from flask_restful import Resource
 
 from config import app, db, api
 from models import User, Movie
+from schemas import user_schema, movie_schema, movie_schema_partial
 
 
 @app.before_request
@@ -19,14 +19,15 @@ class Signup(Resource):
     def post(self):
         data = request.get_json() or {}
 
-        username = data.get('username')
-        password = data.get('password')
+        errors = user_schema.validate(data)
+        if errors:
+            return errors, 422
 
-        if not username or not password:
-            return {'error': 'username and password are required'}, 422
+        if User.query.filter_by(username=data['username']).first():
+            return {'error': 'username already taken'}, 422
 
-        user = User(username=username)
-        user.password_hash = password
+        user = User(username=data['username'])
+        user.password_hash = data['password']
 
         db.session.add(user)
         db.session.commit()
@@ -43,6 +44,9 @@ class Login(Resource):
         username = data.get('username')
         password = data.get('password')
 
+        if not username or not password:
+            return {'error': 'username and password are required'}, 422
+
         user = User.query.filter_by(username=username).first()
 
         if user and user.authenticate(password):
@@ -55,7 +59,6 @@ class Login(Resource):
 class Logout(Resource):
     def delete(self):
         session['user_id'] = None
-
         return {}, 204
 
 
@@ -67,6 +70,7 @@ class CheckSession(Resource):
             return user.to_dict(), 200
 
         return {'error': 'not logged in'}, 401
+
 
 class Movies(Resource):
     def get(self):
@@ -91,19 +95,17 @@ class Movies(Resource):
     def post(self):
         data = request.get_json() or {}
 
-        title = data.get('title')
-        genre = data.get('genre')
-        rating = data.get('rating')
-        watched_on = data.get('watched_on')
+        errors = movie_schema.validate(data)
+        if errors:
+            return errors, 422
 
-        if not title or not genre:
-            return {'error': 'title and genre are required'}, 422
+        valid_data = movie_schema.load(data)
 
         movie = Movie(
-            title=title,
-            genre=genre,
-            rating=rating,
-            watched_on=watched_on,
+            title=valid_data['title'],
+            genre=valid_data.get('genre'),
+            rating=valid_data.get('rating'),
+            watched_on=valid_data.get('watched_on'),
             user_id=session['user_id']
         )
 
@@ -111,6 +113,7 @@ class Movies(Resource):
         db.session.commit()
 
         return movie.to_dict(), 201
+
 
 class MovieByID(Resource):
     def patch(self, id):
@@ -124,14 +127,15 @@ class MovieByID(Resource):
 
         data = request.get_json() or {}
 
-        if 'title' in data:
-            movie.title = data['title']
-        if 'genre' in data:
-            movie.genre = data['genre']
-        if 'rating' in data:
-            movie.rating = data['rating']
-        if 'watched_on' in data:
-            movie.watched_on = data['watched_on']
+        errors = movie_schema_partial.validate(data)
+        if errors:
+            return errors, 422
+
+        valid_data = movie_schema_partial.load(data)
+
+        for attr in ('title', 'genre', 'rating', 'watched_on'):
+            if attr in valid_data:
+                setattr(movie, attr, valid_data[attr])
 
         db.session.commit()
 

@@ -30,10 +30,11 @@ with app.app_context():
                 title=fake.catch_phrase(),
                 genre=fake.random_element(elements=genres),
                 rating=fake.random_int(min=1, max=10),
-                watched_on=fake.date(),
+                watched_on=fake.date_object(),
                 user_id=user.id,
             ))
     db.session.add_all(movies)
     db.session.commit()
 
     print('Done seeding!')
+    
