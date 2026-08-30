@@ -52,8 +52,8 @@ The API runs at `http://127.0.0.1:5555`.
 | GET    | `/check_session`  | No             | Return the current logged-in user          |
 | GET    | `/movies`         | Yes            | List the current user's movies (paginated) |
 | POST   | `/movies`         | Yes            | Create a movie                             |
-| PATCH  | `/movies/<id>`    | Yes            | Update a movie you own                     |
-| DELETE | `/movies/<id>`    | Yes            | Delete a movie you own                     |
+| PATCH  | `/movies/<id>`    | Yes            | Update a movie you've seen                 |
+| DELETE | `/movies/<id>`    | Yes            | Delete a movie you've seen                 |
 
 `GET /movies` accepts `?page=` and `?per_page=` query params (defaults:
 page 1, 10 per page).
